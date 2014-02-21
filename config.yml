@@ -1,0 +1,23 @@
+syslog:
+    target: tcp://192.168.0.1:514
+
+logs:
+    - ident: ircd
+      facility: DAEMON
+      file: /home/ircd/ircd/logs/ircd.log
+      patternfile: patterns/irc/charybdis.ircd.log
+    - ident: ircd
+      facility: AUTH
+      file: /home/ircd/ircd/logs/operlog
+      patterns:
+          - level: info
+            pat: /(?<year>\d\d\d\d)\/(?<month>\d\d?)\/(?<day>\d\d?)\s(?<time>\d\d.\d\d) OPER (?<line>.*?) by (?<hostmask>(?<nick>.*?)!(?<ident>~?(?:.*?))@(?<host>.*?)) \((?<address>.*?)\)/
+            format: \line oper from \address (\hostmask)
+    - ident: ircd
+      file: /home/ircd/ircd/logs/ircd.log
+      matcher: Ouroboros::Matchers::Charybdis::operlo()
+    - ident: ircd
+      file: /home/ircd/ircd/logs/operlog
+      matcher: Ouroboros::Matchers::Charybdis::Operlog
+
+
