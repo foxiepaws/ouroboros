@@ -45,14 +45,14 @@ sub ouro_oper {
     my $line = shift;
     return undef unless($line =~ /$datetime OPER (?<oline>.*?) by $hostmask \((?<address>.*?)\)/);
     my $message = $+{oline} . " oper from " . $+{address} . " (" . $+{hostmask} . ")";
-    return {facl => "AUTH", sev => "NOTICE", msg => $message};
+    return {facl => "auth", sev => "notice", msg => $message};
 }
 
 sub ouro_failed_oper {
     my $line = shift;
     return undef unless($line =~ /$datetime FAILED OPER \((?<oline>.*?)\) by \($hostmask\) \((?<address>.*?)\)/);
     my $message = $+{oline} . " BAD oper from " . $+{address} . " (" . $+{hostmask} . ")";
-    return {facl => "AUTH", sev => "WARNING", msg => $message};
+    return {facl => "auth", sev => "notice", msg => $message};
 }
 
 1;
