@@ -33,11 +33,21 @@ sub log {
     $module =~ s/(.*)::(?<entry>.*?)\(\)$/$1/;
     if (defined $+{entry}) {
         my $entry = $+{entry};
-        eval { no strict 'refs'; my $log = &{"$module\::$entry"}($line) }
+        eval { 
+            no strict 'refs'; 
+            my $log = &{"$module\::$entry"}($line);
+            my $sev = $log->{facl}."|".$log->{sev}; 
+            syslog("$sev","%s",$log->{msg})
+        }
     } else {
-        eval { no strict 'refs'; my $log = &{"$module\::main"}($line); print Dumper $log; my $sev = $log->{facl}."|".$log->{sev}; print "syslog(\"$sev\", \"%s\", \$log->{msg});\n"; syslog("$sev","%s",$log->{msg})}
+        eval { 
+            no strict 'refs'; 
+            my $log = &{"$module\::main"}($line); 
+            my $sev = $log->{facl}."|".$log->{sev}; 
+            syslog("$sev","%s",$log->{msg})
+        }
     }
-    die $@ if $@;
+    warn $@ if $@;
 }
 
 # the entry point that is actually ran from
@@ -61,7 +71,7 @@ sub Run {
 
 sub SetupSyslog {
     my $self = shift;
-    $0 = $self->{config}->{ident}; # for some reason syslog() isn't able to log
+    $0 = "ouro-".$self->{config}->{ident}; # for some reason syslog() isn't able to log
                                    # to auth.log and friends when i call
                                    # openlog(). this is a ugly work around that
                                    # enables the ident to show up correctly.
@@ -78,13 +88,15 @@ sub LoadMatcher {
                 no strict 'refs';
                 eval { print Dumper &{"$module\::".$+{entry} }("test") };
                 if ($@) {
-                    die 'Module Failed to Load: $@'
+                     warn 'Module Failed to Load: $@';
+                     exit
                 }
             } else {
                 no strict 'refs';
                 eval { print Dumper &{"$module\::main"}("test") };
                 if ($@) {
-                    die 'Module Failed to load: $@'
+                    warn 'Module Failed to load: $@';
+                    exit
                 }
             }
         }
